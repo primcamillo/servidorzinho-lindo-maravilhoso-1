@@ -1,43 +1,48 @@
-const { comidas } = require('./ComidasRepository')
+const { connect } = require('./ComidasRepository')
+const comidasModel = require('./ComidasSchema')
 
-const getAll = () => {
-  return comidas.pratosFavoritos
-}
+connect() // para conectar no mongoDB
 
-const add = (comida) => {
-  comida.id = Math.random().toString(36).substr(-8)
-  getAll().push(comida)
-  return comida
-}
-
-const remove = (id) => {
-  comidas.pratosFavoritos = getAll().filter((comida) => {
-    return comida.id !== id
+const getAll = async () => {
+  return comidasModel.find((error, comidas) => {
+    return comidas
   })
 }
 
-const update = (id, comida) => {
-  let comidaCadastrada = getAll().find(comida => {
-    return comida.id === id
-  })
-
-  if(comidaCadastrada === undefined){ // nao encontrou a comida
-    return false
-  }
-  else {
-    if(comida.nome !== undefined) {
-      comidaCadastrada.nome = comida.nome
+const getById = async (id) => {
+  return comidasModel.findById(
+    id,
+    (error, comida) => {
+      return comida
     }
-    if(comida.descricao !== undefined) {
-      comidaCadastrada.descricao = comida.descricao
-    }
+  ) 
+}
 
-    return true
-  }
+const add = async (comida) => {
+  const novaComida = new comidasModel(comida)
+  return novaComida.save()
+}
+
+
+const remove = async (id) => {
+  return comidasModel.findByIdAndDelete(id)
+}
+
+const update = async (id, comida) => {
+  return comidasModel.findByIdAndUpdate(
+    id,
+    { $set: comida },
+    { new: true }, // RETORNAR A COMIDA JA ATUALIZADA NO CALLBACK
+    function (error, comida) { // é o nosso callback
+      return comida
+    }
+  )
+
 }
 
 module.exports = {
   getAll,
+  getById,
   add,
   remove,
   update
